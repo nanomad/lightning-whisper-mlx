@@ -15,7 +15,7 @@ setup(
         "torch",
         "tqdm",
         "more-itertools",
-        "tiktoken>=0.3.3",
+        "tiktoken>=0.7.0,<1.0.0",
         "scipy"
     ],
 )
