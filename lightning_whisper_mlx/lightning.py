@@ -1,5 +1,6 @@
 from .transcribe import transcribe_audio
-from huggingface_hub import hf_hub_download 
+from huggingface_hub import hf_hub_download
+from huggingface_hub.utils import EntryNotFoundError
 
 models = {
     "tiny": {
@@ -79,16 +80,18 @@ class LightningWhisperMLX():
                 self.name += "-8-bit"
 
         if "distil" in model:
-            filename1 = f"./mlx_models/{self.name}/weights.npz"
-            filename2 = f"./mlx_models/{self.name}/config.json"
             local_dir = "./"
+            prefix = f"./mlx_models/{self.name}/"
         else:
-            filename1 = "weights.npz"
-            filename2 = "config.json"
             local_dir = f"./mlx_models/{self.name}"
+            prefix = ""
 
-        hf_hub_download(repo_id=repo_id, filename=filename1, local_dir=local_dir)
-        hf_hub_download(repo_id=repo_id, filename=filename2, local_dir=local_dir)
+        hf_hub_download(repo_id=repo_id, filename=f"{prefix}config.json", local_dir=local_dir)
+        # Try safetensors first, fall back to npz
+        try:
+            hf_hub_download(repo_id=repo_id, filename=f"{prefix}weights.safetensors", local_dir=local_dir)
+        except EntryNotFoundError:
+            hf_hub_download(repo_id=repo_id, filename=f"{prefix}weights.npz", local_dir=local_dir)
     
     def transcribe(self, audio_path, language=None, word_timestamps: bool = False):
         result = transcribe_audio(audio_path, path_or_hf_repo=f'./mlx_models/{self.name}', language=language, batch_size=self.batch_size, word_timestamps=word_timestamps)
