@@ -394,6 +394,7 @@ def transcribe_audio(
 
     seek_clip_end = seek_clips[0][1]
     seek = -3000
+    pbar = tqdm.tqdm(total=content_frames, unit="frames", desc="Transcribe")
     while seek < seek_clip_end:
         time_offset = float(seek * HOP_LENGTH / SAMPLE_RATE)
 
@@ -444,6 +445,9 @@ def transcribe_audio(
 
             if not condition_on_previous_text or res.temperature > 0.5:
                 prompt_reset_since = len(all_tokens)
+
+        pbar.update(len(mel_segments) * N_FRAMES)
+    pbar.close()
 
     return dict(
         text=tokenizer.decode(all_tokens[len(initial_prompt_tokens) :]),
